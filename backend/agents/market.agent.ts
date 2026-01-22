@@ -2,47 +2,42 @@ import { BaseAgent } from "./base.agent.js";
 import { runLLM } from "../llm/ollama.client.js";
 import { cleanJsonResponse, parseJsonSafely } from "../utils/json.utils.js";
 import type { ResearchOutput } from "../types/research.types.js";
-import type { ValidationOutput } from "../types/validation.types.js";
+import type { MarketOutput } from "../types/market.types.js";
 
-export class ValidationAgent extends BaseAgent<
-  ResearchOutput,
-  ValidationOutput
-> {
-  name = "ValidationAgent";
+export class MarketAgent extends BaseAgent<ResearchOutput, MarketOutput> {
+  name = "MarketAgent";
 
-  async run(research: ResearchOutput): Promise<ValidationOutput> {
+  async run(research: ResearchOutput): Promise<MarketOutput> {
     this.logStart();
     
     try {
       const prompt = `
         CRITICAL: Return ONLY valid JSON. No markdown, no explanations, no extra text.
 
-        You are a startup validation expert.
+        You are a market analyst.
 
-        Validate the following research:
-
+        Analyze the market using this research:
         ${JSON.stringify(research, null, 2)}
 
         Rules:
-        - Be critical
-        - No motivational language
-        - Base conclusions only on given data
+        - Be realistic
+        - No hype
+        - No assumptions beyond data
         - Escape all quotes in string values
         - No trailing commas
 
         Return this EXACT JSON structure:
         {
-          "isProblemWorthSolving": true,
-          "reasoning": "string",
-          "targetUsers": ["string"],
-          "risks": ["string"],
-          "recommendation": "PROCEED"
+          "existingAlternatives": ["string"],
+          "differentiation": ["string"],
+          "pricingSignals": ["string"],
+          "distributionChannels": ["string"]
         }
       `;
 
       const response = await runLLM(prompt);
       const cleanedResponse = cleanJsonResponse(response);
-      const parsedResponse = parseJsonSafely<ValidationOutput>(cleanedResponse);
+      const parsedResponse = parseJsonSafely<MarketOutput>(cleanedResponse);
       
       this.logSuccess();
       return parsedResponse;

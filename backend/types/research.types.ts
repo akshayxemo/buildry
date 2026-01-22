@@ -1,6 +1,6 @@
 export interface ResearchInput {
   problemStatement: string;
-  geography?: string;
+  geography?: string | undefined;
 }
 
 export interface ResearchOutput {

@@ -1,48 +1,45 @@
 import { BaseAgent } from "./base.agent.js";
 import { runLLM } from "../llm/ollama.client.js";
 import { cleanJsonResponse, parseJsonSafely } from "../utils/json.utils.js";
-import type { ResearchOutput } from "../types/research.types.js";
 import type { ValidationOutput } from "../types/validation.types.js";
+import type { ProductOutput } from "../types/product.types.js";
 
-export class ValidationAgent extends BaseAgent<
-  ResearchOutput,
-  ValidationOutput
-> {
-  name = "ValidationAgent";
+export class ProductAgent extends BaseAgent<ValidationOutput, ProductOutput> {
+  name = "ProductAgent";
 
-  async run(research: ResearchOutput): Promise<ValidationOutput> {
+  async run(validation: ValidationOutput): Promise<ProductOutput> {
     this.logStart();
     
     try {
       const prompt = `
         CRITICAL: Return ONLY valid JSON. No markdown, no explanations, no extra text.
 
-        You are a startup validation expert.
+        You are a product manager.
 
-        Validate the following research:
+        Based on this validation:
+        ${JSON.stringify(validation, null, 2)}
 
-        ${JSON.stringify(research, null, 2)}
+        Define a realistic MVP.
 
         Rules:
-        - Be critical
-        - No motivational language
-        - Base conclusions only on given data
+        - Keep scope minimal
+        - No technical buzzwords
+        - Focus on outcome
         - Escape all quotes in string values
         - No trailing commas
 
         Return this EXACT JSON structure:
         {
-          "isProblemWorthSolving": true,
-          "reasoning": "string",
-          "targetUsers": ["string"],
-          "risks": ["string"],
-          "recommendation": "PROCEED"
+          "mvpGoal": "string",
+          "coreFeatures": ["string"],
+          "excludedFeatures": ["string"],
+          "successMetrics": ["string"]
         }
       `;
 
       const response = await runLLM(prompt);
       const cleanedResponse = cleanJsonResponse(response);
-      const parsedResponse = parseJsonSafely<ValidationOutput>(cleanedResponse);
+      const parsedResponse = parseJsonSafely<ProductOutput>(cleanedResponse);
       
       this.logSuccess();
       return parsedResponse;

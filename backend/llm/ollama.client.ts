@@ -9,11 +9,17 @@ export async function runLLM(
   prompt: string,
   model = "phi3:mini"
 ): Promise<string> {
-  const res = await ollama.post("/generate", {
-    model,
-    prompt,
-    stream: false,
-  });
+  try {
+    const res = await ollama.post("/generate", {
+      model,
+      prompt,
+      stream: false,
+    });
 
-  return res.data.response;
+    return res.data.response;
+    
+  } catch (error) {
+    console.error(`❌ [LLM] Request failed: ${(error as any).message}`);
+    throw error;
+  }
 }

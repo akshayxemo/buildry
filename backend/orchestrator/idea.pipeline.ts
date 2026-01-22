@@ -1,27 +1,44 @@
 import { ResearchAgent } from "../agents/research.agent.js";
 import { ValidationAgent } from "../agents/validation.agent.js";
+import { ProductAgent } from "../agents/product.agent.js";
+import { MarketAgent } from "../agents/market.agent.js";
+import { CriticAgent } from "../agents/critic.agent.js";
 
-export class IdeaPipeline {
-  private researchAgent = new ResearchAgent();
-  private validationAgent = new ValidationAgent();
+export class BuildryPipeline {
+  private research = new ResearchAgent();
+  private validation = new ValidationAgent();
+  private product = new ProductAgent();
+  private market = new MarketAgent();
+  private critic = new CriticAgent();
 
-  async run(input: {
-    problemStatement: string;
-    geography?: string;
-  }) {
-    // Step 1: Research
-    const researchResult = await this.researchAgent.run({
-      problemStatement: input.problemStatement,
-      geography: input.geography,
-    });
+  async run(input: { problemStatement: string; geography?: string }) {
+    console.log("🚀 [PIPELINE] Starting pipeline");
+    
+    try {
+      const research = await this.research.run(input);
+      const validation = await this.validation.run(research);
+      const product = await this.product.run(validation);
+      const market = await this.market.run(research);
 
-    // Step 2: Validation
-    const validationResult =
-      await this.validationAgent.run(researchResult);
+      const critic = await this.critic.run({
+        research,
+        validation,
+        product,
+        market,
+      });
 
-    return {
-      research: researchResult,
-      validation: validationResult,
-    };
+      console.log("✅ [PIPELINE] Pipeline completed");
+
+      return {
+        research,
+        validation,
+        product,
+        market,
+        critic,
+      };
+    } catch (error) {
+      console.error(`❌ [PIPELINE] Pipeline failed: ${(error as Error).message}`);
+      throw error;
+    }
   }
 }
